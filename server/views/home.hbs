@@ -1,0 +1,78 @@
+<div class="row">
+    <div class="col-lg-12 text-center">
+        <h1>WebRTC Playground</h1>
+        <div>
+            Video Source:
+            <select id="camera"></select>
+        </div>
+        <br>
+        <video autoplay></video>
+        <br>
+
+        <button class="btn btn-default" id="normal-btn">Normal</button>
+        <button class="btn btn-default" id="grayscale-btn">Gray</button>
+    </div>
+    <script>
+        let grayscaleButton = document.getElementById('grayscale-btn')
+        let normalButton = document.getElementById('normal-btn')
+        let videoArea = document.querySelector('video')
+        let videoSelect = document.getElementById('camera')
+        navigator.mediaDevices.enumerateDevices().then(getCameras)
+
+        videoSelect.onchange = startStream
+
+        startStream()
+
+        function getCameras(sourceInfos) {
+            for (let i = 0; i !== sourceInfos.length; i++) {
+                let sourceInfo = sourceInfos[i]
+                var option = document.createElement('option')
+                option.value = sourceInfo.deviceId
+                console.log(sourceInfo)
+                if (sourceInfo.kind === 'videoinput') {
+                    option.text = sourceInfo.label || 'camera ' + (videoSelect.length + 1)
+                    videoSelect.appendChild(option)
+                }
+            }
+        }
+
+        function startStream() {
+            navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia
+            let videoSource = videoSelect.value
+            let constraints = {
+                audio: false,
+                video: {
+                    mandatory: {
+                        maxWidth: 640,
+                        minWidth: 640,
+                        minHeight: 360,
+                        maxHeight: 480
+                    },
+                    optional: [{
+                        sourceId: videoSource
+                    }]
+                }
+            }
+
+            navigator.getUserMedia(constraints, onSuccess, onError)
+        }
+
+        function onSuccess(stream) {
+            console.log('Success! We have a stream!')
+            videoArea.src = window.URL.createObjectURL(stream)
+            videoArea.play()
+        }
+
+        function onError(error) {
+            console.log("Error with getUserMedia", error)
+        }
+
+        grayscaleButton.addEventListener("click", function () {
+            videoArea.className = 'grayscale-filter'
+        })
+
+        normalButton.addEventListener("click", function () {
+            videoArea.classList.remove('grayscale-filter')
+        });
+    </script>
+</div>
