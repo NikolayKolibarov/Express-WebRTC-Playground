@@ -8,18 +8,27 @@
         <br>
         <video autoplay></video>
         <br>
-
+        <span>Actions:</span>
+        <button class="btn btn-default" id="start-btn">Start</button>
+        <button class="btn btn-default" id="stop-btn">Stop</button>
+        <p></p>
+        <span>Filters:</span>
         <button class="btn btn-default" id="normal-btn">Normal</button>
         <button class="btn btn-default" id="grayscale-btn">Gray</button>
     </div>
     <script>
+        let startButton = document.getElementById('start-btn')
+        let stopButton = document.getElementById('stop-btn')
         let grayscaleButton = document.getElementById('grayscale-btn')
         let normalButton = document.getElementById('normal-btn')
         let videoArea = document.querySelector('video')
         let videoSelect = document.getElementById('camera')
+        let currentStream;
+
         navigator.mediaDevices.enumerateDevices().then(getCameras)
 
         videoSelect.onchange = startStream
+
 
         startStream()
 
@@ -53,19 +62,61 @@
                     }]
                 }
             }
-
             navigator.getUserMedia(constraints, onSuccess, onError)
         }
+
+        function stopStream() {
+            let videoSource = videoSelect.value
+            let constraints = {
+                audio: false,
+                video: {
+                    mandatory: {
+                        maxWidth: 640,
+                        minWidth: 640,
+                        minHeight: 360,
+                        maxHeight: 480
+                    },
+                    optional: [{
+                        sourceId: videoSource
+                    }]
+                }
+            }
+            navigator.getUserMedia(constraints,
+                function (stream) {
+                    console.log('stop')
+                    // can also use getAudioTracks() or getVideoTracks()
+                    var track = currentStream.getTracks()[0];  // if only one media track
+                    console.log(track)
+                    // ...
+                    track.stop();
+                },
+                function (error) {
+                    console.log('getUserMedia() error', error);
+                })
+        }
+
+
 
         function onSuccess(stream) {
             console.log('Success! We have a stream!')
             videoArea.src = window.URL.createObjectURL(stream)
             videoArea.play()
+            currentStream = stream
+
         }
 
         function onError(error) {
             console.log("Error with getUserMedia", error)
         }
+
+
+        startButton.addEventListener("click", function () {
+            startStream()
+        })
+
+        stopButton.addEventListener("click", function () {
+            stopStream(videoArea)
+        });
 
         grayscaleButton.addEventListener("click", function () {
             videoArea.className = 'grayscale-filter'
